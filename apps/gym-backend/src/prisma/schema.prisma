@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+  output   = ".../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  GYM_OWNER
+  STAFF
+  CLIENT
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+
+  role         UserRole @default(CLIENT)
+
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedGyms     Gym[]
+  memberships   GymMember[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+}
+
+model Gym {
+  id      String @id @default(uuid())
+  name    String
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  members GymMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model GymMember {
+  id String @id @default(uuid())
+
+  userId String
+  gymId  String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gym  Gym  @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  status MembershipStatus @default(ACTIVE)
+
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, gymId])
+  @@index([gymId])
+  @@index([userId])
+}
+
+model RefreshToken {
+  id String @id @default(uuid())
+
+  tokenHash String @unique
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
