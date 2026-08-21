@@ -1,17 +1,9 @@
-import type {
-  Request,
-  Response,
-  NextFunction,
-} from "express";
+import type { Request, Response, NextFunction } from "express";
 
-import type { UserRole } from "@prisma/client";
+import type { UserRole } from "../../lib/prisma.js";
 
 export function authorize(...roles: UserRole[]) {
-  return (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         message: "Authentication required",

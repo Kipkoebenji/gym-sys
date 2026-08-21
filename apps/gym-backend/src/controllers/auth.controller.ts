@@ -1,7 +1,4 @@
-import type {
-  Request,
-  Response,
-} from "express";
+import type { Request, Response } from "express";
 
 import {
   loginUser,
@@ -10,7 +7,7 @@ import {
   registerUser,
 } from "../services/auth.service.js";
 
-import { prisma } from "../lib/prisma.js";
+import { prisma } from "../../lib/prisma.js";
 
 const REFRESH_COOKIE_NAME = "refreshToken";
 
@@ -21,50 +18,24 @@ const refreshCookieOptions = {
   path: "/api/auth",
 };
 
-function setRefreshCookie(
-  res: Response,
-  refreshToken: string,
-) {
-  res.cookie(
-    REFRESH_COOKIE_NAME,
-    refreshToken,
-    {
-      ...refreshCookieOptions,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    },
-  );
+function setRefreshCookie(res: Response, refreshToken: string) {
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+    ...refreshCookieOptions,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
 }
 
 function clearRefreshCookie(res: Response) {
-  res.clearCookie(
-    REFRESH_COOKIE_NAME,
-    refreshCookieOptions,
-  );
+  res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions);
 }
 
-export async function register(
-  req: Request,
-  res: Response,
-) {
+export async function register(req: Request, res: Response) {
   try {
-    const {
-      name,
-      email,
-      password,
-      gymName,
-    } = req.body;
+    const { name, email, password, gymName } = req.body;
 
-    const result = await registerUser(
-      name,
-      email,
-      password,
-      gymName,
-    );
+    const result = await registerUser(name, email, password, gymName);
 
-    setRefreshCookie(
-      res,
-      result.tokens.refreshToken,
-    );
+    setRefreshCookie(res, result.tokens.refreshToken);
 
     return res.status(201).json({
       message: "Registration successful",
@@ -73,10 +44,7 @@ export async function register(
       accessToken: result.tokens.accessToken,
     });
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message === "EMAIL_ALREADY_EXISTS"
-    ) {
+    if (error instanceof Error && error.message === "EMAIL_ALREADY_EXISTS") {
       return res.status(409).json({
         message: "An account with this email already exists",
       });
@@ -90,25 +58,13 @@ export async function register(
   }
 }
 
-export async function login(
-  req: Request,
-  res: Response,
-) {
+export async function login(req: Request, res: Response) {
   try {
-    const {
-      email,
-      password,
-    } = req.body;
+    const { email, password } = req.body;
 
-    const result = await loginUser(
-      email,
-      password,
-    );
+    const result = await loginUser(email, password);
 
-    setRefreshCookie(
-      res,
-      result.tokens.refreshToken,
-    );
+    setRefreshCookie(res, result.tokens.refreshToken);
 
     return res.status(200).json({
       message: "Login successful",
@@ -116,10 +72,7 @@ export async function login(
       accessToken: result.tokens.accessToken,
     });
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message === "INVALID_CREDENTIALS"
-    ) {
+    if (error instanceof Error && error.message === "INVALID_CREDENTIALS") {
       return res.status(401).json({
         message: "Invalid email or password",
       });
@@ -133,13 +86,9 @@ export async function login(
   }
 }
 
-export async function refresh(
-  req: Request,
-  res: Response,
-) {
+export async function refresh(req: Request, res: Response) {
   try {
-    const refreshToken =
-      req.cookies?.refreshToken;
+    const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
       return res.status(401).json({
@@ -147,13 +96,9 @@ export async function refresh(
       });
     }
 
-    const tokens =
-      await refreshAccessToken(refreshToken);
+    const tokens = await refreshAccessToken(refreshToken);
 
-    setRefreshCookie(
-      res,
-      tokens.refreshToken,
-    );
+    setRefreshCookie(res, tokens.refreshToken);
 
     return res.status(200).json({
       accessToken: tokens.accessToken,
@@ -167,13 +112,9 @@ export async function refresh(
   }
 }
 
-export async function logout(
-  req: Request,
-  res: Response,
-) {
+export async function logout(req: Request, res: Response) {
   try {
-    const refreshToken =
-      req.cookies?.refreshToken;
+    const refreshToken = req.cookies?.refreshToken;
 
     if (refreshToken) {
       await logoutUser(refreshToken);
@@ -195,10 +136,7 @@ export async function logout(
   }
 }
 
-export async function me(
-  req: Request,
-  res: Response,
-) {
+export async function me(req: Request, res: Response) {
   try {
     if (!req.user) {
       return res.status(401).json({

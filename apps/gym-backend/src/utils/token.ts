@@ -1,17 +1,14 @@
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
-import type { UserRole } from "@prisma/client";
+import type { UserRole } from "../../lib/prisma.js";
 
 interface AccessTokenPayload {
   sub: string;
   role: UserRole;
 }
 
-export function generateAccessToken(
-  userId: string,
-  role: UserRole,
-) {
+export function generateAccessToken(userId: string, role: UserRole) {
   return jwt.sign(
     {
       sub: userId,
@@ -25,10 +22,8 @@ export function generateAccessToken(
 }
 
 export function verifyAccessToken(token: string) {
-  return jwt.verify(
-    token,
-    env.JWT_ACCESS_SECRET,
-  ) as jwt.JwtPayload & AccessTokenPayload;
+  return jwt.verify(token, env.JWT_ACCESS_SECRET) as jwt.JwtPayload &
+    AccessTokenPayload;
 }
 
 export function generateRefreshToken() {
@@ -36,8 +31,5 @@ export function generateRefreshToken() {
 }
 
 export function hashRefreshToken(token: string) {
-  return crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
+  return crypto.createHash("sha256").update(token).digest("hex");
 }

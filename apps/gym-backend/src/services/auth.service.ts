@@ -1,16 +1,9 @@
-import { prisma } from "../lib/prisma.js";
-import {
-  hashPassword,
-  verifyPassword,
-} from "../utils/password.js";
+import { prisma } from "../../lib/prisma.js";
+import { hashPassword, verifyPassword } from "../utils/password.js";
 
-import {
-  createTokens,
-} from "./token.service.js";
+import { createTokens } from "./token.service.js";
 
-import {
-  hashRefreshToken,
-} from "../utils/token.js";
+import { hashRefreshToken } from "../utils/token.js";
 
 export async function registerUser(
   name: string,
@@ -60,10 +53,7 @@ export async function registerUser(
     };
   });
 
-  const tokens = await createTokens(
-    result.user.id,
-    result.user.role,
-  );
+  const tokens = await createTokens(result.user.id, result.user.role);
 
   return {
     user: {
@@ -77,10 +67,7 @@ export async function registerUser(
   };
 }
 
-export async function loginUser(
-  email: string,
-  password: string,
-) {
+export async function loginUser(email: string, password: string) {
   const user = await prisma.user.findUnique({
     where: {
       email,
@@ -91,19 +78,13 @@ export async function loginUser(
     throw new Error("INVALID_CREDENTIALS");
   }
 
-  const passwordValid = await verifyPassword(
-    user.passwordHash,
-    password,
-  );
+  const passwordValid = await verifyPassword(user.passwordHash, password);
 
   if (!passwordValid) {
     throw new Error("INVALID_CREDENTIALS");
   }
 
-  const tokens = await createTokens(
-    user.id,
-    user.role,
-  );
+  const tokens = await createTokens(user.id, user.role);
 
   return {
     user: {
@@ -116,9 +97,7 @@ export async function loginUser(
   };
 }
 
-export async function refreshAccessToken(
-  refreshToken: string,
-) {
+export async function refreshAccessToken(refreshToken: string) {
   const tokenHash = hashRefreshToken(refreshToken);
 
   const storedToken = await prisma.refreshToken.findUnique({
@@ -152,17 +131,12 @@ export async function refreshAccessToken(
     },
   });
 
-  const tokens = await createTokens(
-    storedToken.user.id,
-    storedToken.user.role,
-  );
+  const tokens = await createTokens(storedToken.user.id, storedToken.user.role);
 
   return tokens;
 }
 
-export async function logoutUser(
-  refreshToken: string,
-) {
+export async function logoutUser(refreshToken: string) {
   const tokenHash = hashRefreshToken(refreshToken);
 
   await prisma.refreshToken.updateMany({
