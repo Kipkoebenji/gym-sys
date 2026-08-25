@@ -55,6 +55,8 @@ export default function Home() {
     setError("");
     setLoading(true);
 
+    //fix this register function to validate the form data before proceeding with registration logic
+
     // Validate form data
     validateForm("name", formData.name);
     validateForm("email", formData.email);
