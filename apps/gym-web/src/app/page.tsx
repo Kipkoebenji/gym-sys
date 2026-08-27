@@ -310,3 +310,7 @@ export default function RegisterForm(){
     </form>
   );
 }
+
+
+
+//these register form shoud match the gym system and what the backend is going to return
