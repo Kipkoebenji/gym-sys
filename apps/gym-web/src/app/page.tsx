@@ -1,108 +1,149 @@
 "use client"
 
-import { FormEvent, use, useState } from "react"
+import { FormEvent, useState } from "react";
 
 type RegisterFormData = {
-  fullName: string
-  email: string
-  phone: string
-  password: string
-  confirmPassword: string
-}
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+};
 
-type FormErrors = Partial<Record<keyof RegisterFormData, string>>
+type FormErrors = Partial<Record<keyof RegisterFormData, string>>;
 
 const initialForm: RegisterFormData = {
   fullName: "",
   email: "",
   phone: "",
   password: "",
-  confirmPassword: ""
-}
+  confirmPassword: "",
+};
 
-function validateField(field: keyof RegisterFormData, value: string, form: RegisterFormData){
-  switch(field){
+function validateField(
+  field: keyof RegisterFormData,
+  value: string,
+  form: RegisterFormData
+): string {
+  switch (field) {
     case "fullName":
-      if(!value.trim()) return "Full name is required"
-      if(value.trim().length < 2) return "Full name must be atleast 2 characters"
-      return ""
-     
+      if (!value.trim()) return "Full name is required.";
+      if (value.trim().length < 2)
+        return "Full name must be at least 2 characters.";
+      return "";
+
     case "email":
-      if(!value.trim()) return "Full name is required"
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid email"
-      return ""
-      
+      if (!value.trim()) return "Email is required.";
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+        return "Enter a valid email address.";
+
+      return "";
+
     case "phone":
-      if(!value.trim()) return "Phone number is required"
-      if(!/^\+?[0-9]{9,15}$/.test(value)) return "Enter a valid phone number"
-      return ""
-      
+      if (!value.trim()) return "Phone number is required.";
+
+      if (!/^\+?[0-9]{9,15}$/.test(value))
+        return "Enter a valid phone number.";
+
+      return "";
+
     case "password":
-      if(!value) return "Password is required"
-      if(value.length < 8) return "Password must be atleast 8 characters"
-      if(!/[A-Z]/.test(value)) return "Password must contain an uppercase letter"
-      if(!/[a-z]/.test(value)) return "Password must contain an lowercase letter"
-      if(!/[0-9]/.test(value)) return "Password must contain a number"
-      return ""  
+      if (!value) return "Password is required.";
+      if (value.length < 8)
+        return "Password must be at least 8 characters.";
+      if (!/[A-Z]/.test(value))
+        return "Password must contain an uppercase letter.";
+      if (!/[a-z]/.test(value))
+        return "Password must contain a lowercase letter.";
+      if (!/[0-9]/.test(value))
+        return "Password must contain a number.";
 
-     case "confirmPassword":
-      if(!value) return "Please confirm your password"
-      if(value !== form.password) return "Passwords do not match" 
-      return ""
+      return "";
 
-     default:
-      return "" 
+    case "confirmPassword":
+      if (!value) return "Please confirm your password.";
+
+      if (value !== form.password)
+        return "Passwords do not match.";
+
+      return "";
+
+    default:
+      return "";
   }
 }
 
-function validateForm(form: RegisterFormData): FormErrors{
-    const errors: FormErrors = {}
+function validateForm(form: RegisterFormData): FormErrors {
+  const errors: FormErrors = {};
 
-    for(const field of Object.keys(form) as Array<keyof RegisterFormData>){
-      const error = validateField(field, form[field], form)
+  for (const field of Object.keys(form) as Array<keyof RegisterFormData>) {
+    const error = validateField(field, form[field], form);
 
-      if(error){
-        errors[field] = error
-      }
+    if (error) {
+      errors[field] = error;
     }
-    return errors
   }
 
-export default function RegisterForm(){
-  const [form, setForm] = useState<RegisterFormData>(initialForm)
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [touched, setTouched] = useState<Partial<Record<keyof RegisterFormData, boolean>>>({})
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [ isSubmitting, setIsSubmitting] = useState(false)
-  const [serverError, setServerError] = useState("")
+  return errors;
+}
 
-  const handleChange = (field: keyof RegisterFormData, value: string) => {
-    const updatedForm = {...form, [field]: value}
-    setForm(updatedForm)
+export default function RegisterForm() {
+  const [form, setForm] = useState<RegisterFormData>(initialForm);
 
-    if(touched[field]){
-      const error = validateField(field,value,updatedForm)
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const [touched, setTouched] = useState<
+    Partial<Record<keyof RegisterFormData, boolean>>
+  >({});
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState("");
+
+  const handleChange = (
+    field: keyof RegisterFormData,
+    value: string
+  ) => {
+    const updatedForm = {
+      ...form,
+      [field]: value,
+    };
+
+    setForm(updatedForm);
+
+    // Validate immediately after the field has been touched.
+    if (touched[field]) {
+      const error = validateField(field, value, updatedForm);
 
       setErrors((previous) => ({
-        ...previous, [field]: error || undefined
-      }))
+        ...previous,
+        [field]: error || undefined,
+      }));
     }
 
-    if(field === "password" && touched.confirmPassword){
-      const confirmPasswordError = validateField("confirmPassword", updatedForm.confirmPassword, updatedForm)
+    // Password changes can make confirmPassword invalid.
+    if (field === "password" && touched.confirmPassword) {
+      const confirmPasswordError = validateField(
+        "confirmPassword",
+        updatedForm.confirmPassword,
+        updatedForm
+      );
 
-       setErrors((previous) => ({
-        ...previous, confirmPassword: confirmPasswordError || undefined
-      }))
+      setErrors((previous) => ({
+        ...previous,
+        confirmPassword: confirmPasswordError || undefined,
+      }));
     }
-
-  }
+  };
 
   const handleBlur = (field: keyof RegisterFormData) => {
-    setTouched((previous) =>({
-      ...previous,  [field]: true
-    }))
+    setTouched((previous) => ({
+      ...previous,
+      [field]: true,
+    }));
 
     const error = validateField(field, form[field], form);
 
@@ -117,11 +158,12 @@ export default function RegisterForm(){
 
     setServerError("");
 
-    
+    // Validate everything before submitting.
     const validationErrors = validateForm(form);
 
     setErrors(validationErrors);
 
+    // Mark every field as touched.
     setTouched({
       fullName: true,
       email: true,
@@ -310,7 +352,6 @@ export default function RegisterForm(){
     </form>
   );
 }
-
 
 
 //this register form shoud match the gym system and what the backend is going to return
