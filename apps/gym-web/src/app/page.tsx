@@ -313,4 +313,4 @@ export default function RegisterForm(){
 
 
 
-//these register form shoud match the gym system and what the backend is going to return
+//this register form shoud match the gym system and what the backend is going to return
